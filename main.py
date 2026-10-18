@@ -49,20 +49,21 @@ def selenium_afk_bot():
             # Start Chrome driver
             driver = webdriver.Chrome(options=chrome_options)
             
-            # 1. Pehle direct AFK page par jao
-            driver.get("https://dash.pingless.org/afk")
+            # 1. Pehle domain ke root URL par jao (Domain matching ke liye zaroori hai)
+            driver.get("https://dash.pingless.org")
             time.sleep(3)
             
-            # 2. Bina domain ke cookie inject karo taaki error na aaye
+            # 2. Ab yahan cookie inject karo domain ke sath
             cookie = {
                 'name': 'pingless.sid',
                 'value': COOKIE_VALUE,
+                'domain': 'dash.pingless.org',
                 'path': '/'
             }
             driver.add_cookie(cookie)
             
-            # 3. Page ko refresh karo taaki session active ho jaye aur credits badhne lagein
-            driver.refresh()
+            # 3. Ab target AFK page par jao jahan credits badhte hain
+            driver.get("https://dash.pingless.org/afk")
             time.sleep(15)
             
             if "afk" in driver.current_url:
