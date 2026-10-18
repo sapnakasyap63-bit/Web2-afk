@@ -2,84 +2,100 @@ import os
 import time
 import threading
 from flask import Flask
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 import requests
 
 app = Flask(__name__)
 
-# Render Environment Variables se uthayega
-COOKIE = os.environ.get("SESSION_COOKIE")
+COOKIE_VALUE = os.environ.get("SESSION_COOKIE")
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
-
-# Headers taaki site ko lage real mobile browser se request aa rahi hai
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-    "Cookie": COOKIE,
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
-    "Referer": "https://dash.pingless.org/afk",
-    "Connection": "keep-alive"
-}
 
 @app.route('/')
 def home():
-    return "🤖 Pingless AFK 24/7 Refresher Bot is Running!"
+    return "🤖 Pingless Selenium AFK Bot is Running!"
 
 def send_discord_notification(message):
     if not WEBHOOK_URL:
         return
     try:
-        payload = {"content": message}
-        requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        requests.post(WEBHOOK_URL, json={"content": message}, timeout=10)
     except Exception as e:
-        print(f"❌ Discord Webhook Error: {e}", flush=True)
+        print(f"❌ Discord Error: {e}", flush=True)
 
-def afk_refresher():
-    if not COOKIE:
+def selenium_afk_bot():
+    if not COOKIE_VALUE:
         msg = "❌ Error: SESSION_COOKIE Environment Variable nahi mila!"
         print(msg, flush=True)
         send_discord_notification(msg)
         return
 
-    url = "https://dash.pingless.org/afk"
-    start_msg = "🚀 AFK Page Checker & Refresher Started!"
-    print(start_msg, flush=True)
-    send_discord_notification(start_msg)
-
-    session = requests.Session()
-    session.headers.update(HEADERS)
+    msg = "🚀 Selenium Headless Browser AFK Bot Started!"
+    print(msg, flush=True)
+    send_discord_notification(msg)
 
     count = 0
     while True:
+        driver = None
         try:
-            # allow_redirects=True rakha hai taaki agar login page par feke toh pata chale
-            response = session.get(url, timeout=20, allow_redirects=True)
+            # Chrome options for headless server environment
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1920,1080")
             
-            # Check karenge ki kya URL redirect hoke login par gaya ya wahi hai
-            if "afk" in response.url:
-                if response.status_code == 200:
-                    count += 1
-                    msg = f"✅ [{count}] Exact AFK page hit successfully! Session active."
-                    print(msg, flush=True)
-                    send_discord_notification(msg)
-                else:
-                    msg = f"⚠️ AFK Page Status Code: {response.status_code}"
-                    print(msg, flush=True)
-                    send_discord_notification(msg)
+            # Start Chrome driver
+            driver = webdriver.Chrome(options=chrome_options)
+            
+            # Pehle domain par jaakar cookie set karni padti hai
+            driver.get("https://dash.pingless.org")
+            time.sleep(3)
+            
+            # Cookie add karo
+            cookie = {
+                'name': 'pingless.sid',
+                'value': COOKIE_VALUE,
+                'domain': 'dash.pingless.org',
+                'path': '/'
+            }
+            driver.add_cookie(cookie)
+            
+            # Ab AFK page par jao
+            driver.get("https://dash.pingless.org/afk")
+            
+            # Page ko load hone aur JS chalne ke liye 15 seconds do
+            time.sleep(15)
+            
+            if "afk" in driver.current_url:
+                count += 1
+                msg = f"✅ [{count}] Selenium successfully loaded AFK page & ran JS!"
+                print(msg, flush=True)
+                send_discord_notification(msg)
             else:
-                msg = f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!"
+                msg = f"❌ Redirected away! Current URL: {driver.current_url}"
                 print(msg, flush=True)
                 send_discord_notification(msg)
 
         except Exception as e:
-            msg = f"❌ Connection Error: {e}"
+            msg = f"❌ Selenium Error: {e}"
             print(msg, flush=True)
             send_discord_notification(msg)
+            
+        finally:
+            if driver:
+                try:
+                    driver.quit()
+                except:
+                    pass
 
-        # Har 3 minutes (180 seconds) mein page refresh hoga
+        # Har 3 minutes (180 seconds) baad dobara refresh hoga
         time.sleep(180)
 
-# Background thread mein refresher loop chalu kar diya
-threading.Thread(target=afk_refresher, daemon=True).start()
+# Background thread mein bot chalu kar diya
+threading.Thread(target=selenium_afk_bot, daemon=True).start()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
