@@ -4,7 +4,6 @@ import threading
 from flask import Flask
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 import requests
 
 app = Flask(__name__)
@@ -50,28 +49,25 @@ def selenium_afk_bot():
             # Start Chrome driver
             driver = webdriver.Chrome(options=chrome_options)
             
-            # Pehle domain par jaakar cookie set karni padti hai
-            driver.get("https://dash.pingless.org")
+            # 1. Pehle direct AFK page par jao
+            driver.get("https://dash.pingless.org/afk")
             time.sleep(3)
             
-            # Cookie add karo
+            # 2. Bina domain ke cookie inject karo taaki error na aaye
             cookie = {
                 'name': 'pingless.sid',
                 'value': COOKIE_VALUE,
-                'domain': 'dash.pingless.org',
                 'path': '/'
             }
             driver.add_cookie(cookie)
             
-            # Ab AFK page par jao
-            driver.get("https://dash.pingless.org/afk")
-            
-            # Page ko load hone aur JS chalne ke liye 15 seconds do
+            # 3. Page ko refresh karo taaki session active ho jaye aur credits badhne lagein
+            driver.refresh()
             time.sleep(15)
             
             if "afk" in driver.current_url:
                 count += 1
-                msg = f"✅ [{count}] Selenium successfully loaded AFK page & ran JS!"
+                msg = f"✅ [{count}] Selenium successfully loaded AFK page & updated credits!"
                 print(msg, flush=True)
                 send_discord_notification(msg)
             else:
