@@ -29,25 +29,26 @@ def afk_refresher():
         return
 
     url = "https://dash.pingless.org/afk"
-    print("🚀 AFK 24/7 Page Refresher Started!")
+    print("🚀 AFK Page Checker & Refresher Started!")
 
-    # Session object use karne se cookies aur connection browser ki tarah persist rehte hain
     session = requests.Session()
     session.headers.update(HEADERS)
 
     count = 0
     while True:
         try:
-            # Page ko visit / refresh karenge
-            response = session.get(url, timeout=20)
+            # allow_redirects=True rakha hai taaki agar login page par feke toh pata chale
+            response = session.get(url, timeout=20, allow_redirects=True)
             
-            if response.status_code == 200:
-                count += 1
-                print(f"✅ [{count}] AFK Page refreshed successfully! Session active.")
-            elif response.status_code in [401, 403]:
-                print("⚠️ Session Expired! Cookie (SESSION_COOKIE) invalid ho gayi hai, update karni padegi.")
+            # Check karenge ki kya URL redirect hoke login par gaya ya wahi hai
+            if "afk" in response.url:
+                if response.status_code == 200:
+                    count += 1
+                    print(f"✅ [{count}] Exact AFK page hit successfully! Session active.")
+                else:
+                    print(f"⚠️ AFK Page Status Code: {response.status_code}")
             else:
-                print(f"⚠️ Status Code: {response.status_code}. Retrying...")
+                print(f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!")
 
         except Exception as e:
             print(f"❌ Connection Error: {e}")
