@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver matching Chrome version or latest
+# Install ChromeDriver matching Chrome version
 RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | awk -F'.' '{print $1}') && \
     curl -sSLo /tmp/chromedriver-linux64.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/122.0.6261.128/linux64/chromedriver-linux64.zip || \
     curl -sSLo /tmp/chromedriver-linux64.zip https://chromedriver.storage.googleapis.com/LATEST_RELEASE
