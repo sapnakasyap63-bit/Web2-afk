@@ -9,11 +9,14 @@ app = Flask(__name__)
 # Render Environment Variable se Cookie uthayega
 COOKIE = os.environ.get("SESSION_COOKIE")
 
+# Asli mobile browser jaisa Header taaki site ko lage real user active hai
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
     "Cookie": COOKIE,
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Referer": "https://dash.pingless.org/afk"
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+    "Referer": "https://dash.pingless.org/afk",
+    "Connection": "keep-alive"
 }
 
 @app.route('/')
@@ -26,31 +29,31 @@ def ping_afk():
         return
 
     url = "https://dash.pingless.org/afk"
-    print("🚀 AFK Auto-Ping Bot Started on Render Web Service!")
+    print("🚀 Advanced AFK Auto-Ping Bot Started!")
 
     count = 0
     while True:
         try:
+            # Page visit ke sath-sath ek session keep-alive request bhejenge
             response = requests.get(url, headers=HEADERS, timeout=15)
             
             if response.status_code == 200:
                 count += 1
-                print(f"✅ [{count}] Ping successful! Page refreshed. AFK session active.")
+                print(f"✅ [{count}] Ping successful! Credits update honge.")
             elif response.status_code in [401, 403]:
-                print("⚠️ Session Expired or Disconnected! Cookie check karo.")
+                print("⚠️ Session Expired! Cookie dobara update karni padegi.")
             else:
                 print(f"⚠️ Status Code: {response.status_code}. Retrying...")
 
         except Exception as e:
             print(f"❌ Connection Error: {e}")
 
-        # Har 1 minute (60 seconds) me automatic ping karega
-        time.sleep(60)
+        # Har 30 seconds mein ping karega taaki session active rahe
+        time.sleep(30)
 
-# AFK loop ko background thread me chalayenge
+# Background thread mein chalu karenge
 threading.Thread(target=ping_afk, daemon=True).start()
 
 if __name__ == "__main__":
-    # Render automatic PORT variable deta hai
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
