@@ -25,11 +25,11 @@ def home():
 
 def afk_refresher():
     if not COOKIE:
-        print("❌ Error: SESSION_COOKIE Environment Variable nahi mila!")
+        print("❌ Error: SESSION_COOKIE Environment Variable nahi mila!", flush=True)
         return
 
     url = "https://dash.pingless.org/afk"
-    print("🚀 AFK Page Checker & Refresher Started!")
+    print("🚀 AFK Page Checker & Refresher Started!", flush=True)
 
     session = requests.Session()
     session.headers.update(HEADERS)
@@ -44,14 +44,14 @@ def afk_refresher():
             if "afk" in response.url:
                 if response.status_code == 200:
                     count += 1
-                    print(f"✅ [{count}] Exact AFK page hit successfully! Session active.")
+                    print(f"✅ [{count}] Exact AFK page hit successfully! Session active.", flush=True)
                 else:
-                    print(f"⚠️ AFK Page Status Code: {response.status_code}")
+                    print(f"⚠️ AFK Page Status Code: {response.status_code}", flush=True)
             else:
-                print(f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!")
+                print(f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!", flush=True)
 
         except Exception as e:
-            print(f"❌ Connection Error: {e}")
+            print(f"❌ Connection Error: {e}", flush=True)
 
         # Har 3 minutes (180 seconds) mein page refresh hoga
         time.sleep(180)
