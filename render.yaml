@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: web2-afk
+    env: docker
+    plan: free
+    autoDeploy: true
+ 
