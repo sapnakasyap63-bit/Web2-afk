@@ -1,8 +1,12 @@
 import os
 import time
+import threading
+from flask import Flask
 import requests
 
-# Render Environment Variable se cookie uthayega
+app = Flask(__name__)
+
+# Render Environment Variable se Cookie uthayega
 COOKIE = os.environ.get("SESSION_COOKIE")
 
 HEADERS = {
@@ -12,13 +16,17 @@ HEADERS = {
     "Referer": "https://dash.pingless.org/afk"
 }
 
+@app.route('/')
+def home():
+    return "🤖 Pingless AFK Bot is running 24/7!"
+
 def ping_afk():
     if not COOKIE:
         print("❌ Error: SESSION_COOKIE Environment Variable nahi mila!")
         return
 
     url = "https://dash.pingless.org/afk"
-    print("🚀 AFK Auto-Ping Bot Started on Render!")
+    print("🚀 AFK Auto-Ping Bot Started on Render Web Service!")
 
     count = 0
     while True:
@@ -36,8 +44,13 @@ def ping_afk():
         except Exception as e:
             print(f"❌ Connection Error: {e}")
 
-        # Har 1 minute (60 seconds) mein automatic ping karega
+        # Har 1 minute (60 seconds) me automatic ping karega
         time.sleep(60)
 
+# AFK loop ko background thread me chalayenge
+threading.Thread(target=ping_afk, daemon=True).start()
+
 if __name__ == "__main__":
-    ping_afk()
+    # Render automatic PORT variable deta hai
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
