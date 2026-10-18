@@ -6,8 +6,9 @@ import requests
 
 app = Flask(__name__)
 
-# Render Environment Variable se Cookie uthayega
+# Render Environment Variables se uthayega
 COOKIE = os.environ.get("SESSION_COOKIE")
+WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 
 # Headers taaki site ko lage real mobile browser se request aa rahi hai
 HEADERS = {
@@ -23,13 +24,26 @@ HEADERS = {
 def home():
     return "🤖 Pingless AFK 24/7 Refresher Bot is Running!"
 
+def send_discord_notification(message):
+    if not WEBHOOK_URL:
+        return
+    try:
+        payload = {"content": message}
+        requests.post(WEBHOOK_URL, json=payload, timeout=10)
+    except Exception as e:
+        print(f"❌ Discord Webhook Error: {e}", flush=True)
+
 def afk_refresher():
     if not COOKIE:
-        print("❌ Error: SESSION_COOKIE Environment Variable nahi mila!", flush=True)
+        msg = "❌ Error: SESSION_COOKIE Environment Variable nahi mila!"
+        print(msg, flush=True)
+        send_discord_notification(msg)
         return
 
     url = "https://dash.pingless.org/afk"
-    print("🚀 AFK Page Checker & Refresher Started!", flush=True)
+    start_msg = "🚀 AFK Page Checker & Refresher Started!"
+    print(start_msg, flush=True)
+    send_discord_notification(start_msg)
 
     session = requests.Session()
     session.headers.update(HEADERS)
@@ -44,14 +58,22 @@ def afk_refresher():
             if "afk" in response.url:
                 if response.status_code == 200:
                     count += 1
-                    print(f"✅ [{count}] Exact AFK page hit successfully! Session active.", flush=True)
+                    msg = f"✅ [{count}] Exact AFK page hit successfully! Session active."
+                    print(msg, flush=True)
+                    send_discord_notification(msg)
                 else:
-                    print(f"⚠️ AFK Page Status Code: {response.status_code}", flush=True)
+                    msg = f"⚠️ AFK Page Status Code: {response.status_code}"
+                    print(msg, flush=True)
+                    send_discord_notification(msg)
             else:
-                print(f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!", flush=True)
+                msg = f"❌ Redirected away from AFK page! Current URL: {response.url}. Cookie update karni padegi!"
+                print(msg, flush=True)
+                send_discord_notification(msg)
 
         except Exception as e:
-            print(f"❌ Connection Error: {e}", flush=True)
+            msg = f"❌ Connection Error: {e}"
+            print(msg, flush=True)
+            send_discord_notification(msg)
 
         # Har 3 minutes (180 seconds) mein page refresh hoga
         time.sleep(180)
