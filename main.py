@@ -7,13 +7,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 # ----------------------------------------------------
-# 1. FLASK SERVER (For 24/7 Uptime on Render)
+# 1. FLASK SERVER (24/7 Uptime)
 # ----------------------------------------------------
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Selenium AFK Credit Farmer is Live!"
+    return "🤖 Selenium AFK Bot is Live!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -34,7 +34,7 @@ def send_discord_notification(message):
         print(f"❌ Webhook Error: {e}", flush=True)
 
 # ----------------------------------------------------
-# 3. SELENIUM AFK FARMER (Real Browser Session)
+# 3. SELENIUM AFK FARMER (With Secure Cookie Fix)
 # ----------------------------------------------------
 def selenium_afk_farmer():
     if not COOKIE_VALUE:
@@ -43,7 +43,7 @@ def selenium_afk_farmer():
         send_discord_notification(msg)
         return
 
-    msg = "🚀 Selenium Headless AFK Farmer Started! Opening browser to farm credits..."
+    msg = "🚀 Selenium Headless AFK Farmer Started!"
     print(msg, flush=True)
     send_discord_notification(msg)
 
@@ -52,7 +52,7 @@ def selenium_afk_farmer():
         driver = None
         try:
             session_count += 1
-            status_msg = f"🔄 **[Session {session_count}]** Launching browser, injecting cookie, and opening AFK page..."
+            status_msg = f"🔄 **[Session {session_count}]** Launching browser & setting secure cookie..."
             print(status_msg, flush=True)
             send_discord_notification(status_msg)
 
@@ -63,28 +63,31 @@ def selenium_afk_farmer():
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--window-size=1920,1080")
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 
             driver = webdriver.Chrome(options=chrome_options)
 
-            # Step 1: Root domain par jaakar cookie set karna (Cookie error fix)
-            driver.get("https://dash.pingless.org")
+            # Step 1: Pehle root URL par jao
+            driver.get("https://dash.pingless.org/")
             time.sleep(3)
 
+            # Step 2: Modern Chrome ke liye 'secure: True' add karna zaroori hai
             cookie = {
                 'name': 'pingless.sid',
                 'value': COOKIE_VALUE,
                 'domain': 'dash.pingless.org',
-                'path': '/'
+                'path': '/',
+                'secure': True
             }
             driver.add_cookie(cookie)
 
-            # Step 2: AFK page par jana jahan credits badhte hain
+            # Step 3: AFK page par jao jahan credits badhte hain
             driver.get("https://dash.pingless.org/afk")
             
-            # Step 3: Yahan browser ko 2 minutes (120 seconds) tak khula chhodenge taaki JS timer chale
+            # Browser ko 2 minutes tak khula chhodenge taaki credits add ho sakein
             time.sleep(120)
 
-            success_msg = f"✅ **[Session {session_count}]** AFK page kept active for 2 minutes. Credits should now be added!"
+            success_msg = f"✅ **[Session {session_count}]** AFK page kept active successfully. Credits updated!"
             print(success_msg, flush=True)
             send_discord_notification(success_msg)
 
@@ -100,19 +103,14 @@ def selenium_afk_farmer():
                 except:
                     pass
 
-        # Thoda gap dekar agla session start hoga
         time.sleep(5)
 
 # ----------------------------------------------------
 # 4. MAIN EXECUTION
 # ----------------------------------------------------
 if __name__ == "__main__":
-    # Flask server background thread mein
     threading.Thread(target=run_flask, daemon=True).start()
-
-    # Selenium farmer background thread mein
     threading.Thread(target=selenium_afk_farmer, daemon=True).start()
 
-    # Keep main thread alive
     while True:
         time.sleep(1)
