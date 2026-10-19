@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Selenium AFK Bot is Live!"
+    return "🤖 Selenium JS-Cookie AFK Bot is Live!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -34,7 +34,7 @@ def send_discord_notification(message):
         print(f"❌ Webhook Error: {e}", flush=True)
 
 # ----------------------------------------------------
-# 3. SELENIUM AFK FARMER (With Secure Cookie Fix)
+# 3. SELENIUM FARMER (Using JavaScript Cookie Injection)
 # ----------------------------------------------------
 def selenium_afk_farmer():
     if not COOKIE_VALUE:
@@ -43,7 +43,7 @@ def selenium_afk_farmer():
         send_discord_notification(msg)
         return
 
-    msg = "🚀 Selenium Headless AFK Farmer Started!"
+    msg = "🚀 Selenium JS-Injection AFK Farmer Started!"
     print(msg, flush=True)
     send_discord_notification(msg)
 
@@ -52,7 +52,7 @@ def selenium_afk_farmer():
         driver = None
         try:
             session_count += 1
-            status_msg = f"🔄 **[Session {session_count}]** Launching browser & setting secure cookie..."
+            status_msg = f"🔄 **[Session {session_count}]** Launching browser & injecting JS cookie..."
             print(status_msg, flush=True)
             send_discord_notification(status_msg)
 
@@ -67,27 +67,25 @@ def selenium_afk_farmer():
 
             driver = webdriver.Chrome(options=chrome_options)
 
-            # Step 1: Pehle root URL par jao
+            # Step 1: Pehle domain par jao taaki browser ka origin set ho jaye
             driver.get("https://dash.pingless.org/")
             time.sleep(3)
 
-            # Step 2: Modern Chrome ke liye 'secure: True' add karna zaroori hai
-            cookie = {
-                'name': 'pingless.sid',
-                'value': COOKIE_VALUE,
-                'domain': 'dash.pingless.org',
-                'path': '/',
-                'secure': True
-            }
-            driver.add_cookie(cookie)
+            # Step 2: Selenium add_cookie ki jagah JavaScript se direct cookie set karo (Never fails!)
+            js_script = f"document.cookie = 'pingless.sid={COOKIE_VALUE}; path=/; domain=dash.pingless.org; secure; samesite=lax';"
+            driver.execute_script(js_script)
+            
+            # Page ko refresh karo taaki cookie apply hokar login session ban jaye
+            driver.refresh()
+            time.sleep(3)
 
-            # Step 3: AFK page par jao jahan credits badhte hain
+            # Step 3: Ab AFK page par jao
             driver.get("https://dash.pingless.org/afk")
             
             # Browser ko 2 minutes tak khula chhodenge taaki credits add ho sakein
             time.sleep(120)
 
-            success_msg = f"✅ **[Session {session_count}]** AFK page kept active successfully. Credits updated!"
+            success_msg = f"✅ **[Session {session_count}]** AFK page active via JS-Cookie. Credits updated!"
             print(success_msg, flush=True)
             send_discord_notification(success_msg)
 
